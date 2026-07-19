@@ -27,7 +27,7 @@
 
 html {
     scroll-behavior: smooth;
-    font-size: 16px;
+    font-size: 14px;
 }
 
 body {
@@ -1185,7 +1185,7 @@ footer {
 @media (max-width: 768px) {
     .temple-border-frame {
         padding: 14px;
-        top: 25px;
+        top: 80px; /* Pushed down to avoid header overlap on mobile */
     }
 
     .border-top,
