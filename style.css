@@ -575,17 +575,30 @@ header.scrolled .hamburger span {
 
 @media (max-width: 768px) {
     .manthiram-text {
-        font-size: 1.8rem;
+        font-size: 1.4rem;
+        line-height: 1.5;
     }
 
     .manthiram-card {
-        padding: 40px 15px;
+        padding: 30px 10px;
+    }
+
+    .manthiram-card::before,
+    .manthiram-card::after {
+        width: 30px;
+        height: 30px;
+        top: -15px;
     }
 
     .manthiram-note-box {
         flex-direction: column;
         gap: 10px;
-        padding: 20px 15px;
+        padding: 15px;
+    }
+    
+    .manthiram-note-box p {
+        font-size: 1rem;
+        padding: 0;
     }
 }
 
@@ -866,10 +879,31 @@ header.scrolled .hamburger span {
 }
 
 @media (max-width: 768px) {
+    .qr-code {
+        max-width: 150px;
+    }
+    
+    .nankodai-card {
+        padding: 20px 15px;
+    }
+    
+    .qr-container {
+        padding: 15px;
+    }
+
     .nankodai-note-box {
         flex-direction: column;
         gap: 15px;
-        padding: 20px 15px;
+        padding: 15px;
+    }
+
+    .nankodai-note {
+        font-size: 1rem;
+    }
+
+    .upi-button {
+        font-size: 1rem;
+        padding: 10px 20px;
     }
 }
 
