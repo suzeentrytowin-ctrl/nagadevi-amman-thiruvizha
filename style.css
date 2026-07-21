@@ -461,7 +461,10 @@ header.scrolled .hamburger span {
 
 .divine-ambience {
     position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     background: radial-gradient(circle at center, rgba(212, 160, 23, 0.15) 0%, transparent 70%);
     pointer-events: none;
     z-index: 0;
@@ -469,8 +472,13 @@ header.scrolled .hamburger span {
 }
 
 @keyframes pulseGlow {
-    from { opacity: 0.6; }
-    to { opacity: 1; }
+    from {
+        opacity: 0.6;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 .manthiram .container {
@@ -484,7 +492,7 @@ header.scrolled .hamburger span {
 }
 
 .manthiram-card {
-    background: linear-gradient(135deg, rgba(253, 249, 236, 0.95), rgba(255, 253, 208, 0.95));
+    background: #005C29; /* Emerald Green */
     border: 3px solid var(--accent-gold);
     border-radius: 15px;
     padding: 50px 20px;
@@ -562,16 +570,18 @@ header.scrolled .hamburger span {
 
 .lotus-icon {
     font-size: 1.8rem;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
 
 @media (max-width: 768px) {
     .manthiram-text {
         font-size: 1.8rem;
     }
+
     .manthiram-card {
         padding: 40px 15px;
     }
+
     .manthiram-note-box {
         flex-direction: column;
         gap: 10px;
@@ -762,6 +772,108 @@ header.scrolled .hamburger span {
 }
 
 /* ----------------------------------
+   NANKODAI SECTION
+---------------------------------- */
+.nankodai-card {
+    background: #FFF;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    border: 2px solid var(--accent-gold);
+    max-width: 800px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.qr-container {
+    margin-bottom: 30px;
+    display: inline-block;
+    padding: 20px;
+    background: var(--bg-paper);
+    border-radius: 15px;
+    border: 2px dashed var(--copper);
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+}
+
+.qr-code {
+    max-width: 250px;
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.qr-download-link {
+    display: block;
+    text-decoration: none;
+    transition: transform 0.3s;
+}
+
+.qr-download-link:hover {
+    transform: scale(1.02);
+}
+
+.download-text {
+    margin-top: 15px;
+    font-size: 0.95rem;
+    color: var(--primary-maroon);
+    font-weight: 600;
+}
+
+.upi-link-container {
+    margin-top: 20px;
+    border-top: 1px solid rgba(184, 115, 51, 0.3);
+    padding-top: 20px;
+}
+
+.upi-button {
+    display: inline-block;
+    padding: 12px 25px;
+    background: #005C29; /* Emerald Green */
+    color: var(--accent-gold);
+    border-radius: 30px;
+    font-weight: bold;
+    font-size: 1.1rem;
+    border: 2px solid var(--accent-gold);
+    box-shadow: 0 4px 15px rgba(0, 92, 41, 0.3);
+    transition: background 0.3s, color 0.3s, transform 0.3s;
+}
+
+.upi-button:hover {
+    background: var(--accent-gold);
+    color: #005C29;
+    transform: translateY(-2px);
+}
+
+.nankodai-note-box {
+    background: linear-gradient(to right, rgba(212, 160, 23, 0.05), rgba(212, 160, 23, 0.15), rgba(212, 160, 23, 0.05));
+    padding: 25px;
+    border-radius: 10px;
+    border: 1px dashed var(--accent-gold);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+}
+
+.nankodai-note {
+    font-size: 1.2rem;
+    color: var(--primary-maroon);
+    font-weight: bold;
+    line-height: 1.6;
+    margin: 0;
+    flex-grow: 1;
+}
+
+@media (max-width: 768px) {
+    .nankodai-note-box {
+        flex-direction: column;
+        gap: 15px;
+        padding: 20px 15px;
+    }
+}
+
+/* ----------------------------------
    CONTACT SECTION
 ---------------------------------- */
 .contact-grid {
@@ -774,7 +886,8 @@ header.scrolled .hamburger span {
 }
 
 .contact-card {
-    background: #005C29; /* Emerald Green */
+    background: #005C29;
+    /* Emerald Green */
     color: var(--accent-gold);
     padding: 30px;
     text-align: center;
@@ -795,7 +908,7 @@ header.scrolled .hamburger span {
 
 .phone-link {
     display: inline-block;
-    padding: 10px 20px;
+    padding: 10px 15px;
     background: var(--accent-gold);
     color: #005C29;
     border-radius: 25px;
@@ -1110,9 +1223,18 @@ footer {
         padding: 8px 15px;
     }
 
-    .time-box { padding: 10px; min-width: 60px; }
-    .time-box span { font-size: 1.5rem; }
-    .time-box p { font-size: 0.8rem; }
+    .time-box {
+        padding: 10px;
+        min-width: 60px;
+    }
+
+    .time-box span {
+        font-size: 1.5rem;
+    }
+
+    .time-box p {
+        font-size: 0.8rem;
+    }
 
     .timeline-content {
         padding: 15px;
@@ -1158,6 +1280,7 @@ footer {
         box-shadow: 0 0 2px rgba(212, 160, 23, 0.05), inset 0 0 2px rgba(0, 0, 0, 0.1);
         border-color: rgba(255, 255, 255, 0.02);
     }
+
     100% {
         box-shadow: 0 0 5px rgba(212, 160, 23, 0.1), inset 0 0 3px rgba(212, 160, 23, 0.1);
         border-color: rgba(255, 255, 255, 0.08);
@@ -1314,7 +1437,8 @@ footer {
 @media (max-width: 768px) {
     .temple-border-frame {
         padding: 14px;
-        top: 80px; /* Pushed down to avoid header overlap on mobile */
+        top: 80px;
+        /* Pushed down to avoid header overlap on mobile */
     }
 
     .border-top,
