@@ -492,7 +492,8 @@ header.scrolled .hamburger span {
 }
 
 .manthiram-card {
-    background: #005C29; /* Emerald Green */
+    background: #005C29;
+    /* Emerald Green */
     border: 3px solid var(--accent-gold);
     border-radius: 15px;
     padding: 50px 20px;
@@ -595,7 +596,7 @@ header.scrolled .hamburger span {
         gap: 10px;
         padding: 15px;
     }
-    
+
     .manthiram-note-box p {
         font-size: 1rem;
         padding: 0;
@@ -805,7 +806,7 @@ header.scrolled .hamburger span {
     background: var(--bg-paper);
     border-radius: 15px;
     border: 2px dashed var(--copper);
-    box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
 }
 
 .qr-code {
@@ -846,7 +847,8 @@ header.scrolled .hamburger span {
 .upi-button {
     display: inline-block;
     padding: 12px 25px;
-    background: #005C29; /* Emerald Green */
+    background: #005C29;
+    /* Emerald Green */
     color: var(--accent-gold);
     border-radius: 30px;
     font-weight: bold;
@@ -886,11 +888,11 @@ header.scrolled .hamburger span {
     .qr-code {
         max-width: 150px;
     }
-    
+
     .nankodai-card {
         padding: 20px 15px;
     }
-    
+
     .qr-container {
         padding: 15px;
     }
@@ -974,7 +976,7 @@ footer {
     color: var(--accent-gold);
     text-align: center;
     padding: 30px;
-    font-size: 1.2rem;
+    font-size: 0.6rem;
     font-family: var(--font-heading);
 }
 
