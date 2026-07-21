@@ -451,6 +451,135 @@ header.scrolled .hamburger span {
 }
 
 /* ----------------------------------
+   THIRU MANTHIRAM SECTION
+---------------------------------- */
+.manthiram {
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.divine-ambience {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(circle at center, rgba(212, 160, 23, 0.15) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+    animation: pulseGlow 4s infinite alternate;
+}
+
+@keyframes pulseGlow {
+    from { opacity: 0.6; }
+    to { opacity: 1; }
+}
+
+.manthiram .container {
+    position: relative;
+    z-index: 1;
+}
+
+.divine-heading {
+    color: var(--accent-gold) !important;
+    text-shadow: 0 0 15px rgba(212, 160, 23, 0.5);
+}
+
+.manthiram-card {
+    background: linear-gradient(135deg, rgba(253, 249, 236, 0.95), rgba(255, 253, 208, 0.95));
+    border: 3px solid var(--accent-gold);
+    border-radius: 15px;
+    padding: 50px 20px;
+    margin: 30px auto;
+    max-width: 800px;
+    position: relative;
+    box-shadow: 0 10px 30px rgba(107, 15, 15, 0.15), 0 0 30px rgba(212, 160, 23, 0.2), inset 0 0 20px rgba(212, 160, 23, 0.1);
+}
+
+.manthiram-card::before,
+.manthiram-card::after {
+    content: '';
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    background-image: url('assets/images/gopuram.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    top: -20px;
+}
+
+.manthiram-card::before {
+    left: 20px;
+}
+
+.manthiram-card::after {
+    right: 20px;
+    transform: scaleX(-1);
+}
+
+.manthiram-text {
+    font-family: var(--font-heading);
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: var(--accent-gold);
+    line-height: 1.8;
+    text-shadow: 0 0 10px rgba(212, 160, 23, 0.4), 2px 2px 4px rgba(44, 24, 16, 0.3);
+}
+
+.manthiram-note-container {
+    max-width: 700px;
+    margin: 50px auto 0;
+}
+
+.note-title {
+    font-size: 1.5rem;
+    color: var(--copper);
+    margin-bottom: 15px;
+}
+
+.manthiram-note-box {
+    background-color: var(--bg-cream);
+    border: 2px solid var(--copper);
+    border-radius: 10px;
+    padding: 20px 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 5px 15px rgba(184, 115, 51, 0.15);
+    position: relative;
+    background-image: linear-gradient(rgba(255, 253, 208, 0.9), rgba(253, 249, 236, 0.9)), url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="%23fffdd0"/><circle cx="50" cy="50" r="40" fill="%23b87333" opacity="0.05"/></svg>');
+    background-blend-mode: overlay;
+}
+
+.manthiram-note-box p {
+    font-family: var(--font-body);
+    font-size: 1.2rem;
+    color: var(--primary-maroon);
+    font-weight: 600;
+    margin: 0;
+    text-align: center;
+    flex-grow: 1;
+    padding: 0 15px;
+}
+
+.lotus-icon {
+    font-size: 1.8rem;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+}
+
+@media (max-width: 768px) {
+    .manthiram-text {
+        font-size: 1.8rem;
+    }
+    .manthiram-card {
+        padding: 40px 15px;
+    }
+    .manthiram-note-box {
+        flex-direction: column;
+        gap: 10px;
+        padding: 20px 15px;
+    }
+}
+
+/* ----------------------------------
    SCHEDULE TIMELINE
 ---------------------------------- */
 .timeline {
