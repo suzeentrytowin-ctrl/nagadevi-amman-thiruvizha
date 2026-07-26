@@ -3,30 +3,46 @@ document.addEventListener('DOMContentLoaded', () => {
     // 1. CINEMATIC LOADER SEQUENCE
     // --------------------------------------------------------
     const loader = document.getElementById('loader');
+    const loaderVideo = document.getElementById('loader-bg-video');
     const lamps = document.querySelectorAll('.kuthu-vilakku');
     const omSymbol = document.querySelector('.om-symbol');
     const titles = document.querySelectorAll('.loader-title, .loader-subtitle');
     
     // Simulate cinematic loading timeline
     setTimeout(() => {
-        lamps.forEach(lamp => lamp.classList.add('loader-anim-lamp'));
+        if(lamps.length > 0) lamps.forEach(lamp => lamp.classList.add('loader-anim-lamp'));
     }, 500); // Light lamps
 
     setTimeout(() => {
-        omSymbol.classList.add('loader-anim-om');
+        if(omSymbol) omSymbol.classList.add('loader-anim-om');
     }, 1500); // Show Om
 
     setTimeout(() => {
         titles.forEach(title => title.classList.add('loader-anim-title'));
     }, 2500); // Show Text
 
-    setTimeout(() => {
+    function hideLoader() {
+        if (loader.classList.contains('hidden')) return;
         loader.classList.add('hidden');
         setTimeout(() => loader.style.display = 'none', 1000);
         
         // After loader finishes, check for audio autoplay
         checkAudioPlayback();
-    }, 4500); // Fade out loader after 4.5 seconds
+    }
+
+    if (loaderVideo) {
+        loaderVideo.addEventListener('ended', hideLoader);
+        
+        // Fallback in case video is blocked or fails to play
+        loaderVideo.addEventListener('loadedmetadata', () => {
+            setTimeout(hideLoader, (loaderVideo.duration * 1000) + 500);
+        });
+        
+        // Extra fallback
+        setTimeout(hideLoader, 15000);
+    } else {
+        setTimeout(hideLoader, 4500);
+    }
 
     // --------------------------------------------------------
     // 2. AUDIO MANAGEMENT (AUTOPLAY & OVERLAY)
@@ -193,5 +209,67 @@ document.addEventListener('DOMContentLoaded', () => {
             minsEl.innerText = minutes.toString().padStart(2, '0');
             secsEl.innerText = seconds.toString().padStart(2, '0');
         }, 1000);
+    }
+
+    // --------------------------------------------------------
+    // 9. INLINE GALLERY CAROUSEL & LIGHTBOX
+    // --------------------------------------------------------
+    const galleries = document.querySelectorAll('.event-gallery');
+    
+    galleries.forEach(gallery => {
+        const track = gallery.querySelector('.gallery-track');
+        const prevBtn = gallery.querySelector('.prev-btn');
+        const nextBtn = gallery.querySelector('.next-btn');
+        const images = gallery.querySelectorAll('.gallery-img');
+        
+        if (!track || images.length <= 1) {
+            // Hide buttons if 1 or 0 images
+            if(prevBtn) prevBtn.style.display = 'none';
+            if(nextBtn) nextBtn.style.display = 'none';
+            return; 
+        }
+
+        let currentIndex = 0;
+        
+        nextBtn.addEventListener('click', () => {
+            currentIndex++;
+            if (currentIndex >= images.length) currentIndex = 0;
+            updateGallery();
+        });
+
+        prevBtn.addEventListener('click', () => {
+            currentIndex--;
+            if (currentIndex < 0) currentIndex = images.length - 1;
+            updateGallery();
+        });
+
+        function updateGallery() {
+            track.style.transform = `translateX(-${currentIndex * 100}%)`;
+        }
+    });
+
+    // Lightbox Logic
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightbox-img');
+    const lightboxClose = document.querySelector('.lightbox-close');
+    const galleryImages = document.querySelectorAll('.gallery-img');
+
+    if (lightbox && lightboxImg) {
+        galleryImages.forEach(img => {
+            img.addEventListener('click', () => {
+                lightboxImg.src = img.src;
+                lightbox.classList.add('active');
+            });
+        });
+
+        lightboxClose.addEventListener('click', () => {
+            lightbox.classList.remove('active');
+        });
+
+        lightbox.addEventListener('click', (e) => {
+            if (e.target === lightbox) {
+                lightbox.classList.remove('active');
+            }
+        });
     }
 });
