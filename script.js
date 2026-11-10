@@ -311,12 +311,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // API Base URL Detection
     const API_BASE = window.TEMPLE_API_URL || 
-        (window.location.protocol === 'file:' || 
-         ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port !== '5000')
-            ? 'http://localhost:5000/api'
-            : (window.location.hostname.endsWith('github.io')
-                ? 'https://nagadevi-temple-api.onrender.com/api'
-                : '/api'));
+        ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port === '5000'
+            ? '/api'
+            : ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:')
+                ? 'http://localhost:5000/api'
+                : 'https://nagadevi-temple-api.onrender.com/api'));
 
     let currentCalendarData = [];
     let selectedMargazhiDay = null;
