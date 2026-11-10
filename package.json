@@ -1,0 +1,27 @@
+{
+  "name": "nagadevi_amman",
+  "version": "1.0.0",
+  "description": "A premium, production-ready, pure Tamil website built for the **Sri Nagadevi Amman Temple 26th Year Naga Chathurthi Festival**.",
+  "main": "script.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "node --watch server/server.js",
+    "backup": "bash scripts/backup.sh",
+    "test": "node -e \"console.log('✅ Nagadevi Amman Temple Server Ready')\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github-suze:suzeentrytowin-ctrl/nagadevi-amman-thiruvizha.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.10",
+    "express": "^5.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.23.1"
+  }
+}

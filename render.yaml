@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: nagadevi-temple-api
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm install
+    startCommand: node server/server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: nagadevi-temple-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_USERNAME
+        value: admin
+      - key: ADMIN_PASSWORD
+        value: nagadevi2027
+      - key: TEMPLE_UPI_ID
+        value: naganaveen1414@okaxis
+      - key: TEMPLE_UPI_NAME
+        value: Naganaveen Naganaveen
+      - key: BOOKING_EXPIRY_HOURS
+        value: 24
+
+databases:
+  - name: nagadevi-temple-db
+    plan: free
+    region: singapore
+    databaseName: nagadevi_temple
+    user: postgres
+
