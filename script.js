@@ -365,7 +365,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const cacheBuster = `?_t=${Date.now()}`;
             const response = await fetch(`${API_BASE}/margazhi/calendar${cacheBuster}`, { 
                 cache: 'no-store',
-                signal: AbortSignal.timeout(4000) 
+                signal: AbortSignal.timeout(20000) 
             });
             if (response.ok) {
                 const data = await response.json();
