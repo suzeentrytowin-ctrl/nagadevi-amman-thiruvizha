@@ -891,7 +891,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload),
-                        signal: AbortSignal.timeout(5000)
+                        signal: AbortSignal.timeout(25000)
                     });
 
                     const data = await res.json();
@@ -903,7 +903,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     bookingResponse = data.booking;
                 } catch (apiErr) {
-                    // Fallback to client-side database
+                    if (window.location.protocol.startsWith('http')) {
+                        showAlert(formAlert, 'error', 'சர்வர் அல்லது இணைய இணைப்பில் பிழை ஏற்பட்டது. தயவுசெய்து சிறிது நேரம் கழித்து மீண்டும் முயற்சிக்கவும் அல்லது கோயில் நிர்வாகத்தை (79046 89991) தொடர்புகொள்ளவும்.');
+                        submitBtn.disabled = false;
+                        submitBtn.innerText = '🪔 முன்பதிவை உறுதி செய்';
+                        return;
+                    }
+
+                    // Fallback to client-side database only in pure local file mode
                     const existing = getLocalBookings().find(b => b.margazhi_day === day && b.booking_status !== 'CANCELLED');
                     if (existing) {
                         showAlert(formAlert, 'error', 'மன்னிக்கவும்! இந்த மார்கழி நாள் ஏற்கனவே முன்பதிவு செய்யப்பட்டுள்ளது.');
@@ -1127,7 +1134,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 try {
                     const res = await fetch(`${API_BASE}/margazhi/booking/${encodeURIComponent(query)}`, {
-                        signal: AbortSignal.timeout(3500)
+                        signal: AbortSignal.timeout(15000)
                     });
                     if (res.ok) {
                         const data = await res.json();
@@ -1249,7 +1256,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ username, password }),
-                        signal: AbortSignal.timeout(4000)
+                        signal: AbortSignal.timeout(20000)
                     });
                     const data = await res.json();
                     if (res.ok && data.success) {
@@ -1260,7 +1267,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         return;
                     }
                 } catch (netErr) {
-                    // Fallback local admin check
+                    if (window.location.protocol.startsWith('http')) {
+                        showAlert(adminLoginAlert, 'error', 'சர்வர் தொடர்பு பிழை அல்லது சர்வர் தொடங்கப்படுகிறது. தயவுசெய்து சில நொடிகள் கழித்து மீண்டும் முயற்சிக்கவும்.');
+                        return;
+                    }
+                    // Fallback local admin check only on file://
                     if (username === 'admin' && (password === 'nagadevi2027' || password === 'admin')) {
                         success = true;
                         token = 'local_admin_token_' + Date.now();
@@ -1298,7 +1309,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch(`${API_BASE}/admin/stats?_t=${Date.now()}`, {
                 headers: { 'Authorization': `Bearer ${token}` },
                 cache: 'no-store',
-                signal: AbortSignal.timeout(4000)
+                signal: AbortSignal.timeout(15000)
             });
             if (res.status === 401) {
                 sessionStorage.removeItem('nagadevi_admin_token');
@@ -1352,7 +1363,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch(`${API_BASE}/admin/bookings?_t=${Date.now()}`, {
                 headers: { 'Authorization': `Bearer ${token}` },
                 cache: 'no-store',
-                signal: AbortSignal.timeout(4000)
+                signal: AbortSignal.timeout(15000)
             });
             if (res.status === 401) {
                 sessionStorage.removeItem('nagadevi_admin_token');
@@ -1457,7 +1468,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 11.4 Global actions for table buttons
     window.updateBookingStatus = async function(id, status) {
-        const tamilStatus = status === 'CONFIRMED' ? 'உறுதி செய்ய' : 'ரத்து செய்ய';
+        const tamilStatus = status === 'CONFIRMED' ? 'உறுதி செய்ய' : (status === 'CANCELLED' ? 'ரத்து செய்ய' : 'நிலுவைக்கு மாற்ற');
         if (!confirm(`இந்த முன்பதிவை ${tamilStatus} விரும்புகிறீர்களா?`)) return;
 
         const token = sessionStorage.getItem('nagadevi_admin_token');
@@ -1471,15 +1482,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ status })
             });
 
+            const data = await res.json();
             if (res.ok) {
-                alert(`முன்பதிவு நிலை வெற்றிகரமாக மாற்றப்பட்டது!`);
+                alert(data.message || `முன்பதிவு நிலை வெற்றிகரமாக மாற்றப்பட்டது!`);
             } else {
-                updateLocalBooking(id, { booking_status: status });
-                alert(`முன்பதிவு நிலை வெற்றிகரமாக புதுப்பிக்கப்பட்டது.`);
+                alert(`பிழை: ` + (data.message || `முன்பதிவு நிலையை மாற்ற முடியவில்லை.`));
+                return;
             }
         } catch (e) {
-            updateLocalBooking(id, { booking_status: status });
-            alert(`முன்பதிவு நிலை வெற்றிகரமாக புதுப்பிக்கப்பட்டது.`);
+            alert(`இணையப் பிழை அல்லது சர்வர் அணுக முடியவில்லை: ` + e.message);
+            return;
         }
 
         loadAdminStats();
@@ -1501,15 +1513,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ payment_status: 'VERIFIED' })
             });
 
+            const data = await res.json();
             if (res.ok) {
-                alert('கட்டணம் வெற்றிகரமாக சரிபார்க்கப்பட்டு முன்பதிவு உறுதி செய்யப்பட்டது!');
+                alert(data.message || 'கட்டணம் வெற்றிகரமாக சரிபார்க்கப்பட்டு முன்பதிவு உறுதி செய்யப்பட்டது!');
             } else {
-                updateLocalBooking(id, { payment_status: 'VERIFIED', booking_status: 'CONFIRMED' });
-                alert('கட்டணம் சரிபார்க்கப்பட்டது.');
+                alert('பிழை: ' + (data.message || 'கட்டணத்தை சரிபார்க்க முடியவில்லை.'));
+                return;
             }
         } catch (e) {
-            updateLocalBooking(id, { payment_status: 'VERIFIED', booking_status: 'CONFIRMED' });
-            alert('கட்டணம் சரிபார்க்கப்பட்டது.');
+            alert('இணையப் பிழை அல்லது சர்வர் அணுக முடியவில்லை: ' + e.message);
+            return;
         }
 
         loadAdminStats();
@@ -1540,13 +1553,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const bookedDays = new Set(
             adminBookingsCache
                 .filter(item => (item.booking_status !== 'CANCELLED' && String(item.id) !== String(id) && item.booking_reference !== id))
-                .map(item => item.margazhi_day || item.margazhiDay)
+                .map(item => parseInt(item.margazhi_day || item.margazhiDay, 10))
         );
 
         const availableDays = MARGAZHI_DAYS.filter(d => !bookedDays.has(d.day));
 
         select.innerHTML = availableDays.map(d => `
-            <option value="${d.day}" ${d.day === (b.margazhi_day || b.margazhiDay) ? 'selected' : ''}>
+            <option value="${d.day}" ${d.day === parseInt(b.margazhi_day || b.margazhiDay, 10) ? 'selected' : ''}>
                 ${d.tamilDate} - ${d.formattedDate} (${d.tamilDay})
             </option>
         `).join('');
@@ -1583,18 +1596,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 alert(data.message || 'பூஜை தேதி வெற்றிகரமாக மாற்றப்பட்டது!');
             } catch (err) {
-                // Local fallback
-                const dayMeta = MARGAZHI_DAYS.find(d => d.day === newDay);
-                updateLocalBooking(id, {
-                    margazhi_day: newDay,
-                    margazhiDay: newDay,
-                    pooja_date: dayMeta.date,
-                    poojaDate: dayMeta.formattedDate,
-                    tamil_date: dayMeta.tamilDate,
-                    tamilDate: dayMeta.tamilDate,
-                    tamilDay: dayMeta.tamilDay
-                });
-                alert('பூஜை தேதி வெற்றிகரமாக மாற்றப்பட்டது!');
+                alertBox.className = 'form-alert error';
+                alertBox.innerText = 'இணையப் பிழை அல்லது சர்வர் அணுக முடியவில்லை: ' + err.message;
+                alertBox.classList.remove('hidden');
+                return;
             }
 
             document.getElementById('admin-change-date-modal').classList.add('hidden');
@@ -1630,12 +1635,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (res.ok) {
                 alert(data.message || 'முன்பதிவு வெற்றிகரமாக நீக்கப்பட்டது.');
             } else {
-                updateLocalBooking(id, { booking_status: 'CANCELLED' });
-                alert('முன்பதிவு வெற்றிகரமாக நீக்கப்பட்டது.');
+                alert('பிழை: ' + (data.message || 'முன்பதிவை நீக்க முடியவில்லை.'));
+                return;
             }
         } catch (e) {
-            updateLocalBooking(id, { booking_status: 'CANCELLED' });
-            alert('முன்பதிவு வெற்றிகரமாக நீக்கப்பட்டது.');
+            alert('இணையப் பிழை அல்லது சர்வர் அணுக முடியவில்லை: ' + e.message);
+            return;
         }
 
         loadAdminStats();
@@ -1742,7 +1747,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const bookedDays = new Set(
                 adminBookingsCache
                     .filter(item => item.booking_status !== 'CANCELLED')
-                    .map(item => item.margazhi_day || item.margazhiDay)
+                    .map(item => parseInt(item.margazhi_day || item.margazhiDay, 10))
             );
 
             const availableDays = MARGAZHI_DAYS.filter(d => !bookedDays.has(d.day));
@@ -1875,39 +1880,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 savedBooking = data.booking;
                 alert(data.message || 'நேரடி முன்பதிவு வெற்றிகரமாக சேர்க்கப்பட்டது!');
             } catch (err) {
-                // Local fallback
-                const dayMeta = MARGAZHI_DAYS.find(d => d.day === day);
-                const ref = generateBookingRef();
-                savedBooking = {
-                    id: 'LOC-M-' + Date.now(),
-                    reference: ref,
-                    booking_reference: ref,
-                    margazhi_day: day,
-                    margazhiDay: day,
-                    tamil_date: dayMeta.tamilDate,
-                    tamilDate: dayMeta.tamilDate,
-                    pooja_date: dayMeta.date,
-                    poojaDate: dayMeta.formattedDate,
-                    tamilDay: dayMeta.tamilDay,
-                    devotee_name: familyMembers[0].name,
-                    devoteeName: familyMembers[0].name,
-                    family_members: familyMembers,
-                    familyMembers: familyMembers,
-                    mobile_number: mobile,
-                    mobileNumber: mobile,
-                    address,
-                    contribution_amount: 500,
-                    contributionAmount: 500,
-                    payment_method: payMethod,
-                    paymentMethod: payMethod,
-                    payment_status: payStatus,
-                    paymentStatus: payStatus,
-                    booking_status: bookStatus,
-                    bookingStatus: bookStatus,
-                    payment_reference: notes || 'நிர்வாக நேரடி முன்பதிவு',
-                    created_at: new Date().toISOString()
-                };
-                alert('நேரடி முன்பதிவு வெற்றிகரமாக சேர்க்கப்பட்டது!');
+                manualAlert.className = 'form-alert error';
+                manualAlert.innerText = 'இணையப் பிழை அல்லது சர்வர் அணுக முடியவில்லை: ' + err.message;
+                manualAlert.classList.remove('hidden');
+                submitBtn.disabled = false;
+                submitBtn.innerText = '🪔 முன்பதிவை உறுதி செய்து சேர்';
+                return;
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.innerText = '🪔 முன்பதிவை உறுதி செய்து சேர்';
@@ -2008,7 +1986,7 @@ ${membersList}
                 try {
                     const res = await fetch(`${API_BASE}/admin/audit-logs`, {
                         headers: { 'Authorization': `Bearer ${token}` },
-                        signal: AbortSignal.timeout(3500)
+                        signal: AbortSignal.timeout(15000)
                     });
                     if (res.ok) {
                         const data = await res.json();

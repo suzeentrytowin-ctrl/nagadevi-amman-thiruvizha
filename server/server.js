@@ -100,7 +100,8 @@ app.get('/api/margazhi/calendar', async (req, res) => {
                 const result = await query(
                     `SELECT margazhi_day, booking_status, payment_status, booking_reference, devotee_name, family_members, mobile_number, created_at
                      FROM bookings 
-                     WHERE booking_status != 'CANCELLED'`
+                     WHERE booking_status != 'CANCELLED'
+                     ORDER BY CASE WHEN booking_status = 'CONFIRMED' THEN 1 ELSE 2 END, created_at DESC`
                 );
                 activeBookings = result.rows;
             } catch (dbErr) {
@@ -113,7 +114,10 @@ app.get('/api/margazhi/calendar', async (req, res) => {
 
         const bookingMap = new Map();
         activeBookings.forEach(b => {
-            bookingMap.set(parseInt(b.margazhi_day, 10), b);
+            const dayKey = parseInt(b.margazhi_day, 10);
+            if (!bookingMap.has(dayKey)) {
+                bookingMap.set(dayKey, b);
+            }
         });
 
         const calendar = MARGAZHI_DAYS.map(dayInfo => {
@@ -333,18 +337,30 @@ app.post('/api/margazhi/book', async (req, res) => {
                     booking: {
                         id: newBooking.id,
                         reference: newBooking.booking_reference,
+                        booking_reference: newBooking.booking_reference,
                         margazhiDay: newBooking.margazhi_day,
+                        margazhi_day: newBooking.margazhi_day,
                         tamilDate: newBooking.tamil_date,
+                        tamil_date: newBooking.tamil_date,
                         poojaDate: dayMeta.formattedDate,
+                        pooja_date: dayMeta.date,
                         tamilDay: dayMeta.tamilDay,
                         devoteeName: newBooking.devotee_name,
+                        devotee_name: newBooking.devotee_name,
                         familyMembers: newBooking.family_members || parsedMembers,
+                        family_members: newBooking.family_members || parsedMembers,
                         mobileNumber: newBooking.mobile_number,
+                        mobile_number: newBooking.mobile_number,
                         bookingStatus: newBooking.booking_status,
+                        booking_status: newBooking.booking_status,
                         paymentStatus: newBooking.payment_status,
+                        payment_status: newBooking.payment_status,
                         paymentMethod: newBooking.payment_method,
+                        payment_method: newBooking.payment_method,
                         contributionAmount: newBooking.contribution_amount,
-                        expiresAt: newBooking.expires_at
+                        contribution_amount: newBooking.contribution_amount,
+                        expiresAt: newBooking.expires_at,
+                        expires_at: newBooking.expires_at
                     }
                 });
             } catch (txErr) {
