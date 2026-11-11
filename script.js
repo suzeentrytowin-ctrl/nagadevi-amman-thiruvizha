@@ -178,9 +178,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --------------------------------------------------------
-    // 8. FESTIVAL COUNTDOWN TIMER (02 AUGUST 2027, 5:00 PM IST)
+    // 8. FESTIVAL COUNTDOWN TIMER (01 AUGUST 2027, 5:00 PM IST)
     // --------------------------------------------------------
-    const countDownDate = new Date("Aug 02, 2027 17:00:00 GMT+0530").getTime();
+    const countDownDate = new Date("Aug 01, 2027 17:00:00 GMT+0530").getTime();
     
     const daysEl = document.getElementById("days");
     const hoursEl = document.getElementById("hours");
