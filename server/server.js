@@ -227,7 +227,12 @@ app.post('/api/margazhi/book', async (req, res) => {
         }];
     }
 
-    const cleanMobile = (mobile_number || '').replace(/\D/g, '');
+    let cleanMobile = (mobile_number || '').replace(/\D/g, '');
+    if (cleanMobile.length === 12 && cleanMobile.startsWith('91')) {
+        cleanMobile = cleanMobile.slice(2);
+    } else if (cleanMobile.length === 11 && cleanMobile.startsWith('0')) {
+        cleanMobile = cleanMobile.slice(1);
+    }
     if (cleanMobile.length !== 10) {
         return res.status(400).json({
             success: false,
@@ -349,8 +354,11 @@ app.post('/api/margazhi/book', async (req, res) => {
                         message: 'மன்னிக்கவும்! இந்த மார்கழி நாள் ஏற்கனவே முன்பதிவு செய்யப்பட்டுள்ளது. மற்றொரு நாளைத் தேர்ந்தெடுக்கவும்.'
                     });
                 }
-                console.warn('⚠️ PostgreSQL unavailable, falling back to in-memory store:', txErr.message);
-                useMemoryStore = true;
+                console.error('⚠️ PostgreSQL booking error:', txErr);
+                return res.status(500).json({
+                    success: false,
+                    message: 'முன்பதிவு செய்வதில் பிழை ஏற்பட்டது. தயவுசெய்து சிறிது நேரம் கழித்து மீண்டும் முயற்சிக்கவும்.'
+                });
             }
         }
 
@@ -448,20 +456,22 @@ app.get('/api/margazhi/booking/:identifier', async (req, res) => {
             try {
                 const result = await query(
                     `SELECT id, booking_reference, margazhi_day, tamil_date, pooja_date,
-                            devotee_name, mobile_number, nakshatram, rasi, gothram,
+                            devotee_name, family_members, mobile_number, nakshatram, rasi, gothram,
                             contribution_amount, payment_method, payment_status,
                             booking_status, created_at, expires_at
                      FROM bookings
-                     WHERE booking_reference = $1 OR mobile_number = $1
+                     WHERE UPPER(booking_reference) = UPPER($1) OR mobile_number = $1
                      ORDER BY created_at DESC`,
                     [identifier]
                 );
                 bookings = result.rows;
             } catch (dbErr) {
-                bookings = memoryBookings.filter(b => b.booking_reference === identifier || b.mobile_number === identifier);
+                const qUpper = identifier.toUpperCase();
+                bookings = memoryBookings.filter(b => (b.booking_reference && b.booking_reference.toUpperCase() === qUpper) || b.mobile_number === identifier);
             }
         } else {
-            bookings = memoryBookings.filter(b => b.booking_reference === identifier || b.mobile_number === identifier);
+            const qUpper = identifier.toUpperCase();
+            bookings = memoryBookings.filter(b => (b.booking_reference && b.booking_reference.toUpperCase() === qUpper) || b.mobile_number === identifier);
         }
 
         if (bookings.length === 0) {
@@ -480,6 +490,7 @@ app.get('/api/margazhi/booking/:identifier', async (req, res) => {
                 poojaDate: dayMeta ? dayMeta.formattedDate : b.pooja_date,
                 tamilDay: dayMeta ? dayMeta.tamilDay : '',
                 devoteeName: b.devotee_name,
+                familyMembers: typeof b.family_members === 'string' ? JSON.parse(b.family_members || '[]') : (b.family_members || []),
                 mobileNumber: b.mobile_number.slice(0, 3) + '****' + b.mobile_number.slice(7),
                 bookingStatus: b.booking_status,
                 paymentStatus: b.payment_status,
@@ -605,7 +616,7 @@ app.get('/api/admin/bookings', authenticateAdmin, async (req, res) => {
 
                 if (search && search.trim()) {
                     params.push(`%${search.trim()}%`);
-                    sql += ` AND (devotee_name ILIKE $${params.length} OR mobile_number ILIKE $${params.length} OR booking_reference ILIKE $${params.length})`;
+                    sql += ` AND (devotee_name ILIKE $${params.length} OR mobile_number ILIKE $${params.length} OR booking_reference ILIKE $${params.length} OR family_members::text ILIKE $${params.length})`;
                 }
 
                 sql += ` ORDER BY margazhi_day ASC, created_at DESC`;
@@ -620,9 +631,11 @@ app.get('/api/admin/bookings', authenticateAdmin, async (req, res) => {
                 if (status && b.booking_status !== status) return false;
                 if (search && search.trim()) {
                     const q = search.trim().toLowerCase();
+                    const famStr = JSON.stringify(b.family_members || '').toLowerCase();
                     const matches = (b.devotee_name || '').toLowerCase().includes(q) ||
                                     (b.mobile_number || '').includes(q) ||
-                                    (b.booking_reference || '').toLowerCase().includes(q);
+                                    (b.booking_reference || '').toLowerCase().includes(q) ||
+                                    famStr.includes(q);
                     if (!matches) return false;
                 }
                 return true;
@@ -681,6 +694,20 @@ app.patch('/api/admin/booking/:id/status', authenticateAdmin, async (req, res) =
                 }
                 const oldBooking = oldRes.rows[0];
 
+                if (oldBooking.booking_status === 'CANCELLED' && status !== 'CANCELLED') {
+                    const conflict = await query(
+                        `SELECT id, devotee_name FROM bookings 
+                         WHERE pooja_date = $1 AND id != $2 AND booking_status != 'CANCELLED'`,
+                        [oldBooking.pooja_date, bookingId]
+                    );
+                    if (conflict.rows.length > 0) {
+                        return res.status(409).json({
+                            success: false,
+                            message: `இந்த மார்கழி நாளுக்கு (${oldBooking.tamil_date}) ஏற்கனவே மற்றொரு செயலில் உள்ள முன்பதிவு (${conflict.rows[0].devotee_name}) உள்ளது. எனவே இதை மீண்டும் செயல்படுத்த முடியாது.`
+                        });
+                    }
+                }
+
                 const updateRes = await query(
                     `UPDATE bookings 
                      SET booking_status = $1, cancellation_reason = $2, updated_at = CURRENT_TIMESTAMP 
@@ -707,6 +734,17 @@ app.patch('/api/admin/booking/:id/status', authenticateAdmin, async (req, res) =
                 return res.status(404).json({ success: false, message: 'முன்பதிவு காணப்படவில்லை.' });
             }
             const oldStatus = memoryBookings[idx].booking_status;
+
+            if (oldStatus === 'CANCELLED' && status !== 'CANCELLED') {
+                const conflict = memoryBookings.find(b => b.pooja_date === memoryBookings[idx].pooja_date && b.id !== bookingId && b.booking_status !== 'CANCELLED');
+                if (conflict) {
+                    return res.status(409).json({
+                        success: false,
+                        message: `இந்த மார்கழி நாளுக்கு (${memoryBookings[idx].tamil_date}) ஏற்கனவே மற்றொரு செயலில் உள்ள முன்பதிவு (${conflict.devotee_name}) உள்ளது. எனவே இதை மீண்டும் செயல்படுத்த முடியாது.`
+                    });
+                }
+            }
+
             memoryBookings[idx].booking_status = status;
             memoryBookings[idx].cancellation_reason = reason || null;
             memoryBookings[idx].updated_at = new Date();
@@ -869,7 +907,12 @@ app.post('/api/admin/bookings/manual', authenticateAdmin, async (req, res) => {
             parsedMembers = [{ name: primaryName, relationship: 'முதன்மை பக்தர்' }];
         }
 
-        const cleanMobile = (mobile_number || '').replace(/\D/g, '');
+        let cleanMobile = (mobile_number || '').replace(/\D/g, '');
+        if (cleanMobile.length === 12 && cleanMobile.startsWith('91')) {
+            cleanMobile = cleanMobile.slice(2);
+        } else if (cleanMobile.length === 11 && cleanMobile.startsWith('0')) {
+            cleanMobile = cleanMobile.slice(1);
+        }
         const cleanAmount = parseFloat(contribution_amount) || 500;
         const cleanPayMethod = payment_method === 'UPI' ? 'UPI' : 'OFFLINE';
         const cleanPayStatus = payment_status === 'VERIFIED' ? 'VERIFIED' : 'PENDING';
@@ -926,8 +969,11 @@ app.post('/api/admin/bookings/manual', authenticateAdmin, async (req, res) => {
                     booking
                 });
             } catch (dbErr) {
-                console.warn('DB manual booking error, fallback to memory store:', dbErr.message);
-                useMemoryStore = true;
+                console.error('DB manual booking error:', dbErr);
+                return res.status(500).json({
+                    success: false,
+                    message: 'நேரடி முன்பதிவு சேர்க்க முடியவில்லை: ' + (dbErr.message || 'தரவுத்தள பிழை')
+                });
             }
         }
 
@@ -1043,8 +1089,11 @@ app.patch('/api/admin/booking/:id/change-date', authenticateAdmin, async (req, r
                     booking: updated
                 });
             } catch (err) {
-                console.warn('DB date change failed, fallback to memory:', err.message);
-                useMemoryStore = true;
+                console.error('DB date change failed:', err);
+                return res.status(500).json({
+                    success: false,
+                    message: 'பூஜை தேதியை மாற்றுவதில் பிழை: ' + (err.message || 'தரவுத்தள பிழை')
+                });
             }
         }
 
@@ -1124,8 +1173,11 @@ app.delete('/api/admin/booking/:id', authenticateAdmin, async (req, res) => {
                     booking: cancelled
                 });
             } catch (err) {
-                console.warn('DB delete failed, fallback to memory:', err.message);
-                useMemoryStore = true;
+                console.error('DB delete failed:', err);
+                return res.status(500).json({
+                    success: false,
+                    message: 'முன்பதிவை நீக்குவதில் பிழை: ' + (err.message || 'தரவுத்தள பிழை')
+                });
             }
         }
 
@@ -1260,7 +1312,10 @@ async function checkBookingExpirations() {
                 const expiredRes = await query(`
                     UPDATE bookings 
                     SET booking_status = 'CANCELLED', cancellation_reason = 'காலாவதியானது (காலக்கெடு முடிந்தது)' 
-                    WHERE booking_status = 'PENDING' AND payment_status = 'PENDING' AND expires_at < NOW() 
+                    WHERE booking_status = 'PENDING' 
+                      AND payment_status = 'PENDING' 
+                      AND (payment_screenshot IS NULL OR payment_screenshot = '')
+                      AND expires_at < NOW() 
                     RETURNING id, booking_reference, margazhi_day
                 `);
 
@@ -1279,7 +1334,7 @@ async function checkBookingExpirations() {
             }
         } else {
             memoryBookings.forEach(b => {
-                if (b.booking_status === 'PENDING' && b.payment_status === 'PENDING' && new Date(b.expires_at) < now) {
+                if (b.booking_status === 'PENDING' && b.payment_status === 'PENDING' && (!b.payment_screenshot || b.payment_screenshot === '') && new Date(b.expires_at) < now) {
                     b.booking_status = 'CANCELLED';
                     b.cancellation_reason = 'காலாவதியானது (காலக்கெடு முடிந்தது)';
                     memoryAuditLogs.push({

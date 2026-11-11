@@ -810,7 +810,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const day = dayEl ? parseInt(dayEl.value, 10) : null;
 
             const mobileEl = document.getElementById('form-mobile-number');
-            const mobileNumber = mobileEl ? mobileEl.value.replace(/\D/g, '') : '';
+            let mobileNumber = mobileEl ? mobileEl.value.replace(/\D/g, '') : '';
+            if (mobileNumber.length === 12 && mobileNumber.startsWith('91')) {
+                mobileNumber = mobileNumber.slice(2);
+            } else if (mobileNumber.length === 11 && mobileNumber.startsWith('0')) {
+                mobileNumber = mobileNumber.slice(1);
+            }
 
             const addrEl = document.getElementById('form-address');
             const address = addrEl ? addrEl.value.trim() : '';
@@ -1101,8 +1106,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (lookupForm && lookupInput && lookupResultBox) {
         lookupForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const query = lookupInput.value.trim();
-            if (!query) return;
+            const rawQuery = lookupInput.value.trim();
+            if (!rawQuery) return;
+
+            let query = rawQuery;
+            const digits = rawQuery.replace(/\D/g, '');
+            if (digits.length === 12 && digits.startsWith('91')) {
+                query = digits.slice(2);
+            } else if (digits.length === 11 && digits.startsWith('0')) {
+                query = digits.slice(1);
+            } else if (digits.length === 10) {
+                query = digits;
+            }
 
             lookupResultBox.innerHTML = '<p style="text-align:center;">தேடப்படுகிறது...</p>';
             lookupResultBox.classList.remove('hidden');
@@ -1144,6 +1159,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     const tDate = dayMeta ? dayMeta.tamilDate : (b.tamil_date || b.tamilDate || '');
                     const eDate = dayMeta ? `${dayMeta.formattedDate} (${dayMeta.tamilDay})` : (b.pooja_date || b.poojaDate || '');
 
+                    const famArray = Array.isArray(b.familyMembers) ? b.familyMembers : (Array.isArray(b.family_members) ? b.family_members : []);
+                    const famNames = famArray.map(m => m.name || m).filter(Boolean).join(', ');
+
                     return `
                         <div class="lookup-result-item">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -1152,6 +1170,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             </div>
                             <p><strong>முன்பதிவு எண்:</strong> <code>${b.booking_reference || b.reference}</code></p>
                             <p><strong>பக்தர் பெயர்:</strong> ${b.devotee_name || b.devoteeName}</p>
+                            ${famNames ? `<p><strong>குடும்ப உறுப்பினர்கள்:</strong> ${famNames}</p>` : ''}
                             <p><strong>கட்டண நிலை:</strong> ${payStatus} (${b.payment_method || b.paymentMethod})</p>
                         </div>
                     `;
@@ -1760,7 +1779,12 @@ document.addEventListener('DOMContentLoaded', () => {
             manualAlert.classList.add('hidden');
 
             const day = parseInt(manualDaySelect.value, 10);
-            const mobile = document.getElementById('manual-mobile').value.replace(/\D/g, '');
+            let mobile = document.getElementById('manual-mobile').value.replace(/\D/g, '');
+            if (mobile.length === 12 && mobile.startsWith('91')) {
+                mobile = mobile.slice(2);
+            } else if (mobile.length === 11 && mobile.startsWith('0')) {
+                mobile = mobile.slice(1);
+            }
             const address = document.getElementById('manual-address').value.trim();
             const payMethod = document.getElementById('manual-pay-method').value;
             const payStatus = document.getElementById('manual-pay-status').value;
